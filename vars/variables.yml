@@ -7,21 +7,16 @@ db:
     
 certbot:
     email: otrousuario@example.es
-    domain: olgaworpress.myddns.me
-
-phpmyadmin:
-    user: pma_user
-    password: pma_password
-    db_name: db_name
+    domain: alexwordpress.zapto.org
 
 wordpress:
   directory: /var/www/html
-  domain: "https://olgaworpress.myddns.me"
+  domain: "https://alexwordpress.zapto.org"
   title: "Mi Sitio WordPress"
   admin_user: "admin"
   admin_password: "password"
   admin_email: "admin@example.com"
-  hide_login_url: "sitioescondido"
+  hide_login_url: "nohaynada"
   locale: es_ES
 
 nfsserver: 
