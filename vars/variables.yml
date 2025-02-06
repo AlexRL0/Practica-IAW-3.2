@@ -1,6 +1,6 @@
 db:
     frontend_private_ip: "172.31.%" 
-    BACKEND_PRIVATE_IP: "172.31.46.137"
+    BACKEND_PRIVATE_IP: "172.31.36.194"
     name: wordpress
     user: wordpress
     password: password
@@ -25,11 +25,11 @@ wordpress:
   locale: es_ES
 
 nfsserver: 
-    server_ip: "172.31.82.2"
+    server_ip: "172.31.45.54"
 
 nfscliente:
     client_ip: "172.31.0.0/16"
 
 balanceador:
-    IP_FRONTEND_1: "172.31.38.87"
-    IP_FRONTEND_2: "172.31.45.11"
+    IP_FRONTEND_1: "172.31.38.73"
+    IP_FRONTEND_2: "172.31.41.123"
