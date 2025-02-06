@@ -1,6 +1,6 @@
 ---
 - name: Playbook para configurar HTTPS
-  hosts: frontend
+  hosts: balanceador
   become: yes
 
   vars_files:
@@ -21,9 +21,8 @@
 
     - name: Solicitar y configurar certificado SSL/TLS a Let's Encrypt con certbot
       command:
-        certbot --apache \
-        -m {{ certbot.le_email }} \
-        --agree-tos \
-        --no-eff-email \
-        --non-interactive \
-        -d {{ certbot.le_domain }}
+        cmd: certbot --nginx -m {{ certbot.email }} --agree-tos --no-eff-email -d  {{ certbot.domain }} --non-interactive
+
+      #  certbot certonly --webroot -w /var/www/html -d  --non-interactive --agree-tos -m {{ certbot.email }}
+          
+       

@@ -22,32 +22,11 @@
         name: python3-pymysql
         state: present
 
-    - name: Eliminar la base de datos
-      mysql_db:
-        name: "{{ moodle.db_name }}"
-        state: absent
-        login_unix_socket: /var/run/mysqld/mysqld.sock
-
-    - name: Crear una base de datos
-      mysql_db:
-        name: "{{ moodle.db_name }}"
-        state: present
-        login_unix_socket: /var/run/mysqld/mysqld.sock 
-
-    - name: Crear el usuario de la base de datos
-      mysql_user:         
-        name: "{{ moodle.db_user }}"
-        password: "{{ moodle.db_password }}"
-        priv: "{{ moodle.db_name }}.*:ALL"
-        host: "{{ moodle.ip_cliente_mysql }}"
-        state: present
-        login_unix_socket: /var/run/mysqld/mysqld.sock 
-
     - name: Configuramos MySQL para permitir conexiones desde cualquier interfaz
       replace:
         path: /etc/mysql/mysql.conf.d/mysqld.cnf
         regexp: 127.0.0.1
-        replace: 0.0.0.0
+        replace: "{{ db.BACKEND_PRIVATE_IP }}"
 
     - name: Cambiar bind-address en mysqld.cnf
       replace:
