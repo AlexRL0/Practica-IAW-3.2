@@ -1,37 +1,37 @@
 ---
 - name: Configuración de WordPress
-  hosts: backend
+  hosts: frontend
   become: yes
-
+  
   vars_files:
     - ../vars/variables.yml
 
   tasks:
 
-    - name: Eliminar la base de datos si existe
+    - name: Eliminar la base de datos de wordpress si existe
       mysql_db:
-        name: "{{ WORDPRESS_DB_NAME }}"
+        name: "{{ db.name }}"
         state: absent
-        login_user: root
+        login_unix_socket: /var/run/mysqld/mysqld.sock
 
     - name: Crear la base de datos
       mysql_db:
-        name: "{{ WORDPRESS_DB_NAME }}"
+        name: "{{ db.name }}"
         state: present
-        login_user: root
+        login_unix_socket: /var/run/mysqld/mysqld.sock
 
-    - name: Eliminar el usuario si existe
+    - name: Eliminar el usuario de wordpress si existe
       mysql_user:
-        name: "{{ WORDPRESS_DB_USER }}"
-        host: "{{ FRONTEND_PRIVATE_IP }}"
+        name: "{{ db.user }}"
+        host: "{{ db.frontend_private_ip }}"
         state: absent
-        login_user: root
+        login_unix_socket: /var/run/mysqld/mysqld.sock
 
     - name: Crear el usuario de WordPress
       mysql_user:
-        name: "{{ WORDPRESS_DB_USER }}"
-        host: "{{ FRONTEND_PRIVATE_IP }}"
-        password: "{{ WORDPRESS_DB_PASSWORD }}"
-        priv: "{{ WORDPRESS_DB_NAME }}.*:ALL"
+        name: "{{ db.user }}"
+        host: "{{ db.frontend_private_ip }}"
+        password: "{{ db.password }}"
+        priv: "{{ db.name }}.*:ALL"
         state: present
-        login_user: root
+        login_unix_socket: /var/run/mysqld/mysqld.sock

@@ -1,5 +1,5 @@
 ---
-- name: Configuración de Apache y PHP en el frontend
+- name: Configuración de Apache y PHP
   hosts: frontend
   become: yes
   

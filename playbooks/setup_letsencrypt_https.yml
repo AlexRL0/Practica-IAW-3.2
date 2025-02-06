@@ -1,8 +1,7 @@
 ---
-- name: Configuración de Certbot en el Balanceador
+- name: Configuración de Certbot en el balanceador
   hosts: balanceador
   become: yes
-
   vars_files:
     - ../vars/variables.yml
 
@@ -32,4 +31,4 @@
         force: yes
 
     - name: Solicitar un certificado a Let's Encrypt
-      command: certbot --nginx -m {{ LE_EMAIL }} --agree-tos --no-eff-email -d {{ LE_DOMAIN }} --non-interactive
+      command: certbot --nginx -m {{ certbot.email }} --agree-tos --no-eff-email -d {{ certbot.domain }} --non-interactive

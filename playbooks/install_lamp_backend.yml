@@ -1,5 +1,5 @@
 ---
-- name: Configuración de MySQL en el backend
+- name: Configuración de MySQL 
   hosts: backend
   become: yes
   
@@ -26,7 +26,7 @@
       replace:
         path: /etc/mysql/mysql.conf.d/mysqld.cnf
         regexp: '127.0.0.1'
-        replace: "{{ BACKEND_PRIVATE_IP }}"
+        replace: "{{ db.BACKEND_PRIVATE_IP }}"
 
     - name: Reiniciar el servicio de MySQL
       service:

@@ -1,5 +1,5 @@
 ---
-- name: Configuración de WordPress
+- name: Configuración de WordPress con WP-CLI
   hosts: frontend
   become: yes
   
@@ -29,34 +29,34 @@
 
     - name: Eliminar instalaciones previas en /var/www/html
       file:
-        path: "{{ WORDPRESS_DIRECTORY }}/*"
+        path: "{{ wordpress.directory }}/*"
         state: absent
 
     - name: Descargar el código fuente de WordPress
-      command: wp core download --locale=es_ES --path={{ WORDPRESS_DIRECTORY }} --allow-root
+      command: wp core download --locale={{ wordpress.locale }} --path={{ wordpress.directory }} --allow-root
 
     - name: Crear el archivo de configuración de WordPress
-      command: wp config create --dbname={{ WORDPRESS_DB_NAME }} --dbuser={{ WORDPRESS_DB_USER }} --dbpass={{ WORDPRESS_DB_PASSWORD }} --dbhost={{ WORDPRESS_DB_HOST }} --path={{ WORDPRESS_DIRECTORY }} --allow-root
+      command: wp config create --dbname={{ db.name }} --dbuser={{ db.user }} --dbpass={{ db.password }} --dbhost={{ db.BACKEND_PRIVATE_IP }} --path={{ wordpress.directory }} --allow-root
 
     - name: Instalar WordPress
-      command: wp core install --url={{ LE_DOMAIN }} --title={{ WORDPRESS_TITULO }} --admin_user={{ WORDPRESS_USUARIO_ADMIN }} --admin_password={{ WORDPRESS_CONTRA_ADMIN }} --admin_email={{ WORDPRESS_EMAIL_ADMIN }} --path={{ WORDPRESS_DIRECTORY }} --allow-root
+      command: wp core install --url={{ wordpress.domain }} --title={{ wordpress.title }} --admin_user={{ wordpress.admin_user }} --admin_password={{ wordpress.admin_password }} --admin_email={{ wordpress.admin_email }} --path={{ wordpress.directory }} --allow-root
 
     - name: Instalar y activar el theme mindscape
-      command: wp theme install mindscape --activate --path={{ WORDPRESS_DIRECTORY }} --allow-root
+      command: wp theme install mindscape --activate --path={{ wordpress.directory }} --allow-root
 
     - name: Instalar un plugin
-      command: wp plugin install wps-hide-login --activate --path={{ WORDPRESS_DIRECTORY }} --allow-root
+      command: wp plugin install wps-hide-login --activate --path={{ wordpress.directory }} --allow-root
 
     - name: Configurar el plugin de WHL
-      command: wp option update whl_page "{{ WORDPRESS_HIDE_LOGIN_URL }}" --path={{ WORDPRESS_DIRECTORY }} --allow-root
+      command: wp option update whl_page "{{ wordpress.hide_login_url }}" --path={{ wordpress.directory }} --allow-root
 
     - name: Configurar los enlaces permanentes
-      command: wp rewrite structure '/%postname%/' --path={{ WORDPRESS_DIRECTORY }} --allow-root
+      command: wp rewrite structure '/%postname%/' --path={{ wordpress.directory }} --allow-root
 
     - name: Copiar el archivo .htaccess
       copy:
         src: ../htaccess/.htaccess
-        dest: "{{ WORDPRESS_DIRECTORY }}/.htaccess"
+        dest: "{{ wordpress.directory }}/.htaccess"
 
     - name: Cambiar el propietario y el grupo al directorio /var/www/html/
       file:
