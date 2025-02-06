@@ -1,20 +1,36 @@
 db:
-    name: moodle_db
-    user: usuario_moodle
-    password: ContraseñaSuperSegura1308
-
-moodle:
-    directory: /var/www/html
-    db_name: moodle_db
-    db_user: usuario_moodle
-    db_password: Contraasir
-    type: mysqli
-    db_host: 172.31.35.24
-    ip_cliente_mysql: 172.31.%
-    domain: moodle-ansiblearl.zapto.org
-    data_directory: /var/moodledata
-
+    frontend_private_ip: "172.31.%" 
+    BACKEND_PRIVATE_IP: "172.31.46.137"
+    name: wordpress
+    user: wordpress
+    password: password
     
 certbot:
-    le_email: otrousuario@email.es
-    le_domain: moodle-ansiblearl.zapto.org
+    email: otrousuario@example.es
+    domain: olgaworpress.myddns.me
+
+phpmyadmin:
+    user: pma_user
+    password: pma_password
+    db_name: db_name
+
+
+wordpress:
+  directory: /var/www/html
+  domain: "https://olgaworpress.myddns.me"
+  title: "Mi Sitio WordPress"
+  admin_user: "admin"
+  admin_password: "password"
+  admin_email: "admin@example.com"
+  hide_login_url: "sitioescondido"
+  locale: es_ES
+
+nfsserver: 
+    server_ip: "172.31.82.2"
+
+nfscliente:
+    client_ip: "172.31.0.0/16"
+
+balanceador:
+    IP_FRONTEND_1: "172.31.38.87"
+    IP_FRONTEND_2: "172.31.45.11"
