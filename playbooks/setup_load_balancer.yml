@@ -2,7 +2,7 @@
 - name: Configuración de Nginx en el balanceador
   hosts: balanceador
   become: yes
-  
+
   vars_files:
     - ../vars/variables.yml
 
@@ -37,21 +37,21 @@
       replace:
         path: /etc/nginx/sites-available/load_balancer.conf
         regexp: 'IP_FRONTEND_1'
-        replace: "{{ IP_FRONTEND_1 }}"
+        replace: "{{ balanceador.IP_FRONTEND_1 }}"
       notify: Reload Nginx
 
     - name: Modificar el archivo de configuración con las IPs y dominio correctos
       replace:
         path: /etc/nginx/sites-available/load_balancer.conf
         regexp: 'IP_FRONTEND_2'
-        replace: "{{ IP_FRONTEND_2 }}"
+        replace: "{{ balanceador.IP_FRONTEND_2 }}"
       notify: Reload Nginx
 
     - name: Modificar el archivo de configuración con el dominio correcto
       replace:
         path: /etc/nginx/sites-available/load_balancer.conf
         regexp: 'LE_DOMAIN'
-        replace: "{{ LE_DOMAIN }}"
+        replace: "{{ certbot.domain }}"
       notify: Reload Nginx
 
     - name: Activar el archivo de configuración del balanceador de carga si no está activo
