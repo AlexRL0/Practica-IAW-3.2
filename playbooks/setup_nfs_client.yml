@@ -23,10 +23,10 @@
         state: present
 
     - name: Montar el directorio NFS
-      command: mount {{ NFS_SERVER_IP }}:/var/www/html /var/www/html
+      command: mount {{ nfsserver.server_ip }}:/var/www/html /var/www/html
 
     - name: Actualizar /etc/fstab para montar el directorio NFS al iniciar
       lineinfile:
         path: /etc/fstab
-        line: "{{ NFS_SERVER_IP }}:/var/www/html /var/www/html nfs auto,nofail,noatime,nolock,intr,tcp,actimeo=1800 0 0"
+        line: "{{ nfsserver.server_ip }}:/var/www/html /var/www/html nfs auto,nofail,noatime,nolock,intr,tcp,actimeo=1800 0 0"
         create: yes

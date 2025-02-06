@@ -1,8 +1,8 @@
 ---
-- name: Configuración de Apache y PHP
+- name: Configuración de Apache y PHP en el fronted
   hosts: frontend
   become: yes
-  
+
   vars_files:
     - ../vars/variables.yml
 

@@ -40,7 +40,7 @@
       replace:
         path: /etc/exports
         regexp: 'FRONTEND_NETWORK'
-        replace: "{{ FRONTEND_NETWORK }}"
+        replace: "{{ nfscliente.client_ip }}"
 
     - name: Reiniciar el servicio NFS
       service:

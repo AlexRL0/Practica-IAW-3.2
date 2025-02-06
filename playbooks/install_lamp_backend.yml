@@ -1,8 +1,8 @@
 ---
-- name: Configuración de MySQL 
+- name: Configuración de MySQL en el backend
   hosts: backend
   become: yes
-  
+
   vars_files:
     - ../vars/variables.yml
 
