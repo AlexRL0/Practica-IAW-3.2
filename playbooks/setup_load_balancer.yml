@@ -29,7 +29,7 @@
 
     - name: Copiar el archivo de configuración de Nginx
       copy:
-        src: ../conf/load_balancer.conf
+        src: ../templates/load_balancer.conf
         dest: /etc/nginx/sites-available
         mode: '0644'
 

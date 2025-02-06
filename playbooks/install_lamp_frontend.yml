@@ -27,9 +27,9 @@
 
     - name: Copiar el archivo de configuración de Apache
       copy:
-        src: ../conf/000-default.conf
-        dest: /etc/apache2/sites-available
-        mode: '0755'
+        src: ../templates/000-default.conf
+        dest: /etc/apache2/sites-available/
+        mode: 0755
 
     - name: Instalar PHP y algunos módulos de PHP para Apache y MySQL
       apt:
@@ -44,15 +44,7 @@
         name: apache2
         state: restarted
 
-    - name: Copiar el archivo de prueba de PHP en /var/www/html
-      copy:
-        src: ../php/index.php
-        dest: /var/www/html
-        owner: www-data
-        group: www-data
-        mode: '0755'
-
-    - name: Modificar el propietario y el grupo del archivo index.php
+    - name: Modificar el propietario y el grupo del directorio
       file:
         path: /var/www/html
         owner: www-data

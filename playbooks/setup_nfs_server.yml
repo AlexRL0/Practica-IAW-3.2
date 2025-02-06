@@ -2,7 +2,6 @@
 - name: Configuración del servidor NFS
   hosts: nfs
   become: yes
-  
   vars_files:
     - ../vars/variables.yml
 
@@ -30,17 +29,11 @@
         group: nogroup
         mode: '0755'
 
-    - name: Copiar la plantilla exports a /etc/exports
-      copy:
-        src: ../nfs/exports
-        dest: /etc/exports
-        mode: '0644'
-
-    - name: Reemplazar el valor de la plantilla en /etc/exports
-      replace:
+    - name: Configurar los directorios exportados en /etc/exports
+      lineinfile:
         path: /etc/exports
-        regexp: 'FRONTEND_NETWORK'
-        replace: "{{ nfscliente.client_ip }}"
+        line: "/var/www/html {{ nfscliente.client_ip }}(rw,sync,no_subtree_check,no_root_squash)"
+        create: yes
 
     - name: Reiniciar el servicio NFS
       service:
