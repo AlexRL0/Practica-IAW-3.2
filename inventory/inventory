@@ -1,8 +1,17 @@
-[frontend]
+[frontend-1]
 18.215.192.38
 
+[frontend-2]
+44.205.121.178
+
 [backend]
-50.17.188.169
+100.25.237.205
+
+[Balanceador]
+52.20.161.253
+
+[NFS]
+54.152.11.121
 
 [all:vars]
 ansible_user=ubuntu
