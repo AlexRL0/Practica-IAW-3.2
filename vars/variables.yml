@@ -14,7 +14,6 @@ phpmyadmin:
     password: pma_password
     db_name: db_name
 
-
 wordpress:
   directory: /var/www/html
   domain: "https://olgaworpress.myddns.me"
