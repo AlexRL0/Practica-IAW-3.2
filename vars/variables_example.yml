@@ -1,0 +1,20 @@
+db:
+    name: 
+    user:
+    password: 
+
+moodle:
+    directory: 
+    db_name:   
+    db_user: 
+    db_password: 
+    type:   
+    db_host: 
+    ip_cliente_mysql:
+    domain: 
+    data_directory:
+   
+ 
+certbot:
+    le_email:
+    le_domain: 

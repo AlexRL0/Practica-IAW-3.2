@@ -1,0 +1,20 @@
+db:
+    name: moodle_db
+    user: usuario_moodle
+    password: ContraseñaSuperSegura1308
+
+moodle:
+    directory: /var/www/html
+    db_name: moodle_db
+    db_user: usuario_moodle
+    db_password: Contraasir
+    type: mysqli
+    db_host: 172.31.35.24
+    ip_cliente_mysql: 172.31.%
+    domain: moodle-ansiblearl.zapto.org
+    data_directory: /var/moodledata
+
+    
+certbot:
+    le_email: otrousuario@email.es
+    le_domain: moodle-ansiblearl.zapto.org
