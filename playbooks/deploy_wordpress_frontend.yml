@@ -1,135 +1,66 @@
 ---
-- name: Playbook para instalar la pila LAMP en el FrontEnd
+- name: Configuración de WordPress
   hosts: frontend
   become: yes
-
+  
   vars_files:
     - ../vars/variables.yml
 
   tasks:
 
-    - name: Eliminar el directorio de instalación
+    - name: Eliminar descargas previas de WP-CLI
       file:
-        path: /usr/local/bin/wp/
+        path: /tmp/wp-cli.phar
         state: absent
 
-    - name: permisos
-      file:
-        path: /usr/local/bin/wp
-        owner: www-data
-        group: www-data
-        mode: 0755
-
-    - name: Descargar la utilidad WP-CLI
+    - name: Descargar el WP-CLI
       get_url:
         url: https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-        dest: /usr/local/bin/wp
-        mode: 0755
+        dest: /tmp/wp-cli.phar
 
- 
-
-   # - name: Eliminar el directorio de instalación
-   #   file:
-    #    path: /var/www/html/
-     #   state: absent
-
-    - name: Modificamos los permisos del directorio /var/www/html
+    - name: Asignar permisos de ejecución a WP-CLI
       file:
-        path: /var/www/html
-        owner: www-data
-        group: www-data
-        recurse: yes
-        mode: 0755
+        path: /tmp/wp-cli.phar
+        mode: '0755'
 
+    - name: Mover el script WP-CLI al directorio /usr/local/bin
+      command: mv /tmp/wp-cli.phar /usr/local/bin/wp
+      become: yes
 
-    - name: Descargar el código fuente de WordPress config
-      command: 
-        wp core download \
-        --locale="{{ wordpress.locale }}" \
-        --path=/var/www/html \
-        --allow-root
-      #args:
-       # chdir: "/var/www/html/wp-config-sample.php"
-    - name: Eliminar wp-config.php si existe
+    - name: Eliminar instalaciones previas en /var/www/html
       file:
-        path: /var/www/html/wp-config.php
+        path: "{{ WORDPRESS_DIRECTORY }}/*"
         state: absent
 
+    - name: Descargar el código fuente de WordPress
+      command: wp core download --locale=es_ES --path={{ WORDPRESS_DIRECTORY }} --allow-root
+
     - name: Crear el archivo de configuración de WordPress
-      command: 
-        wp config create \
-        --dbname="{{ db.name }}" \
-        --dbuser="{{ db.user }}" \
-        --dbpass="{{ db.password }}" \
-        --dbhost={{ db.BACKEND_PRIVATE_IP }} \
-        --path={{ wordpress.directory }} \
-        --allow-root 
-     # args:
-      #  chdir: "/var/www/html/wp-config.php"
+      command: wp config create --dbname={{ WORDPRESS_DB_NAME }} --dbuser={{ WORDPRESS_DB_USER }} --dbpass={{ WORDPRESS_DB_PASSWORD }} --dbhost={{ WORDPRESS_DB_HOST }} --path={{ WORDPRESS_DIRECTORY }} --allow-root
 
     - name: Instalar WordPress
-      command: 
-        wp core install \
-        --url="{{ wordpress.domain }}" \
-        --title="{{ wordpress.title }}" \
-        --admin_user="{{ wordpress.admin_user }}" \
-        --admin_password="{{ wordpress.admin_password }}" \
-        --admin_email="{{ wordpress.admin_email }}" \
-        --path="{{ wordpress.directory }}" \
-        --allow-root
-      #args:
-      # chdir: "/var/www/html/index.php"
+      command: wp core install --url={{ LE_DOMAIN }} --title={{ WORDPRESS_TITULO }} --admin_user={{ WORDPRESS_USUARIO_ADMIN }} --admin_password={{ WORDPRESS_CONTRA_ADMIN }} --admin_email={{ WORDPRESS_EMAIL_ADMIN }} --path={{ WORDPRESS_DIRECTORY }} --allow-root
 
-    - name: Asegurar permisos de wp-content
-      file:
-        path: /var/www/html/wp-content
-        owner: www-data
-        group: www-data
-        mode: '0755'
-        recurse: yes
+    - name: Instalar y activar el theme mindscape
+      command: wp theme install mindscape --activate --path={{ WORDPRESS_DIRECTORY }} --allow-root
 
+    - name: Instalar un plugin
+      command: wp plugin install wps-hide-login --activate --path={{ WORDPRESS_DIRECTORY }} --allow-root
 
-    - name: Instalar y activar el tema Mindscape
-      command: 
-        wp theme install mindscape --activate \
-        --path={{ wordpress.directory }} \
-        --allow-root
-
-    - name: Instalar y activar el plugin wps-hide-login
-      command: 
-        wp plugin install wps-hide-login --activate \
-        --path={{ wordpress.directory }} \
-        --allow-root
-
-    - name: Configurar el plugin wps-hide-login
-      command: 
-        wp option update whl_page {{ wordpress.hide_login_url }} \
-        --path={{ wordpress.directory }} \
-        --allow-root
+    - name: Configurar el plugin de WHL
+      command: wp option update whl_page "{{ WORDPRESS_HIDE_LOGIN_URL }}" --path={{ WORDPRESS_DIRECTORY }} --allow-root
 
     - name: Configurar los enlaces permanentes
-      command: 
-        wp rewrite structure '/%postname%/' \
-        --path={{ wordpress.directory }} \
-        --allow-root
+      command: wp rewrite structure '/%postname%/' --path={{ WORDPRESS_DIRECTORY }} --allow-root
 
-    - name: Copiar el archivo .htaccess al directorio de WordPress
+    - name: Copiar el archivo .htaccess
       copy:
         src: ../htaccess/.htaccess
-        dest: "{{ wordpress.directory }}/.htaccess"
+        dest: "{{ WORDPRESS_DIRECTORY }}/.htaccess"
+
+    - name: Cambiar el propietario y el grupo al directorio /var/www/html/
+      file:
+        path: /var/www/html/
         owner: www-data
         group: www-data
-        mode: '0644'
-
-    
-    - name: Asegurar que $_SERVER['HTTPS'] esté en wp-config.php
-      lineinfile:
-        path: /var/www/html/wp-config.php
-        line: "$_SERVER['HTTPS'] = 'on';"
-        state: present
-        insertafter: "/* The name of the database for WordPress */"
-    
-    - name: Reiniciar el servidor web Apache
-      service:
-        name: apache2
-        state: restarted
+        recurse: yes

@@ -1,12 +1,11 @@
 ---
-- name: Configurar Nginx como balanceador de carga
-  hosts: Balanceador
+- name: Configuración de Nginx en el balanceador
+  hosts: balanceador
   become: yes
-
+  
   vars_files:
     - ../vars/variables.yml
-  
-  
+
   tasks:
 
     - name: Actualizar los repositorios
@@ -16,54 +15,55 @@
     - name: Actualizar los paquetes
       apt:
         upgrade: dist
+        update_cache: yes
 
     - name: Instalar Nginx
       apt:
         name: nginx
         state: present
 
-    - name: Copiar configuración de balanceador de carga
-      template:
-        src: ../templates/load_balancer.conf
-        dest: /etc/nginx/sites-available/load_balancer.conf
-
-    - name: Deshabilitar el sitio por defecto de Nginx
+    - name: Deshabilitar el enlace simbólico default (si existe)
       file:
         path: /etc/nginx/sites-enabled/default
         state: absent
 
+    - name: Copiar el archivo de configuración de Nginx
+      copy:
+        src: ../conf/load_balancer.conf
+        dest: /etc/nginx/sites-available
+        mode: '0644'
 
-    - name: Sustituir IP_FRONTEND_1 en la configuración
+    - name: Modificar el archivo de configuración con las IPs y dominio correctos
       replace:
         path: /etc/nginx/sites-available/load_balancer.conf
-        regexp: 'balanceador.IP_FRONTEND_1'
-        replace: '{{ balanceador.IP_FRONTEND_1 }}'
+        regexp: 'IP_FRONTEND_1'
+        replace: "{{ IP_FRONTEND_1 }}"
+      notify: Reload Nginx
 
-    - name: Sustituir IP_FRONTEND_2 en la configuración
+    - name: Modificar el archivo de configuración con las IPs y dominio correctos
       replace:
         path: /etc/nginx/sites-available/load_balancer.conf
-        regexp: 'balanceador.IP_FRONTEND_2'
-        replace: '{{ balanceador.IP_FRONTEND_2 }}'
+        regexp: 'IP_FRONTEND_2'
+        replace: "{{ IP_FRONTEND_2 }}"
+      notify: Reload Nginx
 
-    - name: Sustituir LE_DOMAIN en la configuración
+    - name: Modificar el archivo de configuración con el dominio correcto
       replace:
         path: /etc/nginx/sites-available/load_balancer.conf
-        regexp: 'certbot.domain'
-        replace: '{{ certbot.domain }}'
+        regexp: 'LE_DOMAIN'
+        replace: "{{ LE_DOMAIN }}"
+      notify: Reload Nginx
 
-
-    - name: Habilitar la configuración de Nginx
+    - name: Activar el archivo de configuración del balanceador de carga si no está activo
       file:
         src: /etc/nginx/sites-available/load_balancer.conf
         dest: /etc/nginx/sites-enabled/load_balancer.conf
         state: link
+        force: no
+      notify: Reload Nginx
 
-    - name: Deshabilitar 000-default en Nginx
-      file:
-        path: /etc/nginx/sites-available/000-default.conf
-        state: absent
-
-    - name: Reiniciar Nginx
-      systemd:
+  handlers:
+    - name: Reload Nginx
+      service:
         name: nginx
         state: reloaded

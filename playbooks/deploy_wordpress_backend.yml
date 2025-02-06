@@ -1,35 +1,37 @@
 ---
-- name: Playbook para instalar la pila LAMP en el Backend
-  hosts: backend
+- name: Configuración de WordPress
+  hosts: frontend
   become: yes
 
   vars_files:
     - ../vars/variables.yml
 
-  tasks:  
-    
-    - name: Eliminar la base de datos
+  tasks:
+
+    - name: Eliminar la base de datos si existe
       mysql_db:
-        name: "{{ db.name }}"
+        name: "{{ WORDPRESS_DB_NAME }}"
         state: absent
-        login_unix_socket: /var/run/mysqld/mysqld.sock
+        login_user: root
 
-    - name: Crear una base de datos
+    - name: Crear la base de datos
       mysql_db:
-        name: "{{ db.name }}"
+        name: "{{ WORDPRESS_DB_NAME }}"
         state: present
-        login_unix_socket: /var/run/mysqld/mysqld.sock 
+        login_user: root
 
-    - name: Crear el usuario de la base de datos
-      mysql_user:         
-        name: "{{ db.user }}"
-        password: "{{ db.password }}"
-        priv: "{{ db.name }}.*:ALL"
-        host: "{{ db.frontend_private_ip }}"
+    - name: Eliminar el usuario si existe
+      mysql_user:
+        name: "{{ WORDPRESS_DB_USER }}"
+        host: "{{ FRONTEND_PRIVATE_IP }}"
+        state: absent
+        login_user: root
+
+    - name: Crear el usuario de WordPress
+      mysql_user:
+        name: "{{ WORDPRESS_DB_USER }}"
+        host: "{{ FRONTEND_PRIVATE_IP }}"
+        password: "{{ WORDPRESS_DB_PASSWORD }}"
+        priv: "{{ WORDPRESS_DB_NAME }}.*:ALL"
         state: present
-        login_unix_socket: /var/run/mysqld/mysqld.sock 
-
-    - name: Reiniciamos el servicio de base de datos
-      service:
-        name: mysql
-        state: restarted
+        login_user: root

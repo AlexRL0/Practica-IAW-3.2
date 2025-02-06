@@ -1,6 +1,6 @@
 ---
-- name: Playbook para configurar HTTPS
-  hosts: Balanceador
+- name: Configuración de Certbot en el Balanceador
+  hosts: balanceador
   become: yes
 
   vars_files:
@@ -8,21 +8,28 @@
 
   tasks:
 
-    - name: Desinstalar instalaciones previas de Certbot
+    - name: Instalar y actualizar snap
+      snap:
+        name: core
+        state: latest
+
+    - name: Eliminar instalaciones previas de certbot con apt
       apt:
         name: certbot
         state: absent
 
-    - name: Instalar Certbot con snap
+    - name: Instalar el cliente de certbot
       snap:
         name: certbot
+        state: latest
         classic: yes
-        state: present
 
-    - name: Solicitar y configurar certificado SSL/TLS a Let's Encrypt con certbot
-      command:
-        cmd: certbot --nginx -m {{ certbot.email }} --agree-tos --no-eff-email -d  {{ certbot.domain }} --non-interactive
+    - name: Crear alias para el comando certbot
+      file:
+        src: /snap/bin/certbot
+        dest: /usr/bin/certbot
+        state: link
+        force: yes
 
-      #  certbot certonly --webroot -w /var/www/html -d  --non-interactive --agree-tos -m {{ certbot.email }}
-          
-       
+    - name: Solicitar un certificado a Let's Encrypt
+      command: certbot --nginx -m {{ LE_EMAIL }} --agree-tos --no-eff-email -d {{ LE_DOMAIN }} --non-interactive

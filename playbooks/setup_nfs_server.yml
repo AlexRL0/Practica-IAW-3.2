@@ -1,60 +1,48 @@
 ---
-- name: Configurar servidor NFS para WordPress
-  hosts: NFS
+- name: Configuración del servidor NFS
+  hosts: nfs
   become: yes
-
+  
   vars_files:
     - ../vars/variables.yml
 
   tasks:
 
-    - name: Actualizar repositorios
+    - name: Actualizar los repositorios
       apt:
         update_cache: yes
 
+    - name: Actualizar los paquetes
+      apt:
+        upgrade: dist
+        update_cache: yes
 
-    - name: Instalar NFS Kernel Server
+    - name: Instalar el servidor NFS
       apt:
         name: nfs-kernel-server
         state: present
 
-    - name: Crear el directorio para WordPress
+    - name: Crear el directorio /var/www/html
       file:
         path: /var/www/html
         state: directory
         owner: nobody
         group: nogroup
-        mode: 0755
+        mode: '0755'
 
-    - name: Copiar el archivo exports
+    - name: Copiar la plantilla exports a /etc/exports
       copy:
-        src: ../exports
+        src: ../nfs/exports
         dest: /etc/exports
-        mode: 0755
+        mode: '0644'
 
-    - name: Reemplazar CLIENT_IP en /etc/exports
+    - name: Reemplazar el valor de la plantilla en /etc/exports
       replace:
         path: /etc/exports
-        regexp: "nfscliente.client_ip"
-        replace: "{{ nfscliente.client_ip }}"
+        regexp: 'FRONTEND_NETWORK'
+        replace: "{{ FRONTEND_NETWORK }}"
 
-    # Reemplazar WORDPRESS_DIRECTORY con la ruta correspondiente
-    - name: Reemplazar WORDPRESS_DIRECTORY en /etc/exports
-      replace:
-        path: /etc/exports
-        regexp: "/var/www/html"
-        replace: "/var/www/html"
-
-    - name: Modificamos los permisos del directorio /var/www/html
-      file:
-        path: /var/www/html
-        owner: www-data
-        group: www-data
-        recurse: yes
-        mode: 0755
-
-
-    - name: Reiniciar el servidor NFS
+    - name: Reiniciar el servicio NFS
       service:
         name: nfs-kernel-server
         state: restarted

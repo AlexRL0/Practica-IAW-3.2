@@ -1,7 +1,10 @@
 ---
-- name: Playbook para instalar la pila LAMP en el FrontEnd
+- name: Configuración de Apache y PHP en el frontend
   hosts: frontend
   become: yes
+  
+  vars_files:
+    - ../vars/variables.yml
 
   tasks:
 
@@ -9,43 +12,49 @@
       apt:
         update_cache: yes
 
+    - name: Actualizar los paquetes
+      apt:
+        upgrade: dist
+        update_cache: yes
+
     - name: Instalar el servidor web Apache
       apt:
         name: apache2
         state: present
 
-    - name: Habilitar el módulo rewrite de Apache
-      apache2_module:
-        name: rewrite
-        state: present
+    - name: Habilitar el módulo rewrite
+      command: a2enmod rewrite
 
     - name: Copiar el archivo de configuración de Apache
       copy:
-        src: ../templates/000-default.conf
-        dest: /etc/apache2/sites-available/
-        mode: 0755
+        src: ../conf/000-default.conf
+        dest: /etc/apache2/sites-available
+        mode: '0755'
 
-
-    - name: Instalar PHP y los módulos necesarios
-      apt: 
-        name: 
+    - name: Instalar PHP y algunos módulos de PHP para Apache y MySQL
+      apt:
+        name:
           - php
           - libapache2-mod-php
           - php-mysql
-#          - php-xml
-#          - php-mbstring
-#          - php-curl
-#         - php-zip
-#          - php-gd
-#         - php-intl
-#          - php-soap
-#         - php-ldap
-#          - php-opcache
-#         - php-cli
         state: present
 
-    - name: Reiniciar el servidor web Apache
+    - name: Reiniciar el servicio de Apache para aplicar los cambios
       service:
         name: apache2
         state: restarted
 
+    - name: Copiar el archivo de prueba de PHP en /var/www/html
+      copy:
+        src: ../php/index.php
+        dest: /var/www/html
+        owner: www-data
+        group: www-data
+        mode: '0755'
+
+    - name: Modificar el propietario y el grupo del archivo index.php
+      file:
+        path: /var/www/html
+        owner: www-data
+        group: www-data
+        recurse: yes
