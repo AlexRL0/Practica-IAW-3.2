@@ -1,6 +1,6 @@
 ---
 - name: Configurar servidor NFS para WordPress
-  hosts: nfs
+  hosts: NFS
   become: yes
 
   vars_files:

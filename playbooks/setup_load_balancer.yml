@@ -1,6 +1,6 @@
 ---
 - name: Configurar Nginx como balanceador de carga
-  hosts: balanceador
+  hosts: Balanceador
   become: yes
 
   vars_files:

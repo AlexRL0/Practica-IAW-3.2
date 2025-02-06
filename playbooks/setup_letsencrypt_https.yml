@@ -1,6 +1,6 @@
 ---
 - name: Playbook para configurar HTTPS
-  hosts: balanceador
+  hosts: Balanceador
   become: yes
 
   vars_files:
