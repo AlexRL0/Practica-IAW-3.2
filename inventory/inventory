@@ -5,10 +5,10 @@
 [backend]
 100.25.237.205
 
-[Balanceador]
+[balanceador]
 52.20.161.253
 
-[NFS]
+[nfs]
 54.152.11.121
 
 [all:vars]

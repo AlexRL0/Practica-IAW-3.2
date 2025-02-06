@@ -1,6 +1,6 @@
 ---
 - name: Configuración de WordPress
-  hosts: frontend
+  hosts: backend
   become: yes
 
   vars_files:
