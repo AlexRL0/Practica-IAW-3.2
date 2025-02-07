@@ -732,6 +732,8 @@ sudo ansible-playbooks -i /ruta/al/inventario /ruta/al/archivo/yaml
         state: restarted
 ```
 
-## Comprobación de que WordPress y el balanceador de carga funciona
+## Comprobación de que WordPress funciona
 
-![](imagenes/moodle-3.1.png)
+![](imagenes/wordpress-3.2.png)
+![](imagenes/wordpress-3.2-1.png)
+![](imagenes/wordpress-3.2-2.png)
