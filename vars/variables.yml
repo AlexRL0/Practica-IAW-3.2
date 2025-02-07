@@ -6,13 +6,13 @@ db:
     password: password
     
 certbot:
-    email: otrousuario@example.es
-    domain: alexwordpress.zapto.org
+    le_email: admin@gmail.com
+    le_domain: alexwordpress.zapto.org
 
 wordpress:
   directory: /var/www/html
   domain: "https://alexwordpress.zapto.org"
-  title: "Mi Sitio WordPress"
+  title: "SitioAlex"
   admin_user: "admin"
   admin_password: "password"
   admin_email: "admin@example.com"

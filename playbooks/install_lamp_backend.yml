@@ -22,6 +22,11 @@
         name: mysql-server
         state: present
 
+    - name: Instalamos el módulo de pymysql
+      apt:
+        name: python3-pymysql
+        state: present
+
     - name: Configurar el archivo mysqld.cnf
       replace:
         path: /etc/mysql/mysql.conf.d/mysqld.cnf
