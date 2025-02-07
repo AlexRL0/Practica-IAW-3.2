@@ -1,5 +1,5 @@
 ---
-- name: Playbook para instalar la pila LAMP en el FrontEnd
+- name: Playbook para la instalacion de WordPress en un frontal
   hosts: frontend1
   become: yes
 
@@ -31,14 +31,6 @@
         path: /var/www/html/*
         state: absent
       
-    - name: Modificar permisos del directorio /var/www/html
-      file:
-        path: /var/www/html
-        owner: www-data
-        group: www-data
-        recurse: yes
-        mode: 0755
-
     - name: Descargar el código fuente de WordPress
       command: 
         wp core download \

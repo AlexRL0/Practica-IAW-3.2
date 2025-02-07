@@ -2,6 +2,7 @@
 - name: Configuración del servidor NFS
   hosts: nfs
   become: yes
+  
   vars_files:
     - ../vars/variables.yml
 

@@ -1,14 +1,14 @@
-# Practica-IAW-3.2- Implantación de Moodle en Amazon Web Services (AWS) mediante Ansible
+# Practica-IAW-3.2- Implantación de WordPress en tres niveles mediante Ansible
 
 ## Pasos previos a la instalación
 
 **para la instalación vamos a tener que crear la siguiente estructura de directorios y archivos:**
 
-![](imagenes/directorio-3.1.png)
+![](imagenes/directorio-3.2.png)
 
 **Una vez creados los archivos y directorios, procedemos a la instalación de las herramientas.**
 
-## Implantación de Moodle en Amazon Web Services (AWS) mediante Ansible
+## Implantación de WordPress en tres niveles mediante Ansible
 
 ## 1. Creamos un nombre de dominio para nuestro servidor con la web `no-ip`
 
@@ -16,19 +16,22 @@
 
 Para crear el nombre de dominio en la página, tenemos que registrarnos y dirigirnos al sitio que muestra la captura y darle a **crear nombre de host**.
 
-![](imagenes/no-ip-3.1.png)
+![](imagenes/no-ip-3.2.png)
 
 Una vez dado al recuadro de crear el nombre, nos sale un asistente para poner el nombre de host que queramos, el dominio que queremos que lleve, la dirección ip de la máquina o pc que queremos que tenga ese nombre de host y el tipo de registro que queremos que lleve, en nuestro caso es el **DNS Host A**
 
-Hecho esto ya podemos automatizar la Implantación de Moodle en Amazon Web Services (AWS) mediante Ansible
+Hecho esto ya podemos automatizar la implantación de WordPress en tres niveles mediante Ansible
 
 ## 1.1 Infraestructura necesaria
 
-La infraestructura necesaria está compuesta de tres instancias EC2, un nodo de control para ejecutar los playbooks de ansible al resto de máquinas, un frontal donde se desplegará moodle (Frontend) y un backend donde tendremos la base de datos para moodle y el usuario (Back-End).
+La infraestructura necesaria está compuesta de cinco instancias EC2, un nodo de control para ejecutar los playbooks de ansible al resto de máquinas, dos Frontales donde en uno de los frontend se desplegará WordPress, un Backend donde tendremos la base de datos para WordPress y el usuario, un Balanceador de carga para que balancee entre los dos frontales y un servidor NFS para compartir el directorio a uno de los frontales donde se instalará WordPress.
 
 * Nodo de control.
-* Frontal con el moodle desplegado.
-* Servidor de Base de Datos MySQL. (Backend)
+* Frontal con el WordPress desplegado.
+* Frontal con el servidor web Apache desplegado.
+* Servidor de Base de Datos MySQL (Backend).
+* Balanceador de carga.
+* Servidor de replicación de archivos (NFS).
 
 ## 1.2 Aspectos importantes a tener en cuenta
 
@@ -43,23 +46,34 @@ Para que el nodo de control pueda ver las otras máquinas sin problemas, hay que
 
 ```yaml
 [frontend]
-18.215.192.38
+<IP pública del primer Frontend>
+<IP pública del segundo Frontend>
+
+[frontend1] 
+<IP pública del primer Frontend>
 
 [backend]
-50.17.188.169
+<IP pública del Backend>
+
+[balanceador]
+<IP pública del Balanceador>
+
+[nfs]
+<IP pública del nfs>
 
 [all:vars]
 ansible_user=ubuntu
-ansible_ssh_private_key_file=/home/ubuntu/Practica-IAW-3.1/vockey.pem
+ansible_ssh_private_key_file=/ruta/a/la/clave/privada
 ansible_ssh_common_args='-o StrictHostKeyChecking=accept-new'
 ```
 
 > [!IMPORTANT]  
-> `[frontend]:` Especifica el grupo de hosts que son parte del front-end de la infraestructura. Aquí, 18.215.192.38 es la IP del servidor frontend.  
-> `[backend]:` Especifica el grupo de hosts que son parte del back-end de la infraestructura. Aquí, 50.17.188.169 es la IP del servidor backend.  
+> `[frontend]:` Especifica el grupo de hosts que son parte del front-end de la infraestructura.  
+> `[frontend1]:` Este grupo lo he hecho para que a la hora de hacer la instalación de WordPress, sólo lo instale en un frontal.   
+> `[backend]:` Especifica el grupo de hosts que son parte del back-end de la infraestructura.   
 > `[all:vars]:` Define variables globales que se aplican a todos los hosts.  
 > `ansible_user=ubuntu:` El nombre de usuario que se usará para conectarse a los hosts.  
-> `ansible_ssh_private_key_file=/home/ubuntu/Practica-IAW-3.1/vockey.pem:` Ruta al archivo de clave privada SSH para autenticarse en los hosts.  
+> `ansible_ssh_private_key_file=/ruta/a/la/clave/privada:` Ruta al archivo de clave privada SSH para autenticarse en los hosts.  
 > `ansible_ssh_common_args='-o StrictHostKeyChecking=accept-new':` Argumentos adicionales de SSH, en este caso, para aceptar automáticamente nuevas claves de host sin preguntar.
 
 También es importante darle los permisos necesarios a la clave `vockey.pem` para que pueda leer el archivo. Eso se puede hacer mediante chmod de la siguiente manera:
@@ -74,13 +88,13 @@ Para ejecutar los playbooks de ansible se hace de la siguiente forma:
 sudo ansible-playbooks -i /ruta/al/inventario /ruta/al/archivo/yaml
 ```
 
-## 2. Creación del archivo `install_lamp_frontend` para la instalación de apache en el frontend.
+## 2. Creación del archivo `install_lamp_frontend` para la instalación de apache en los frontales.
 
 ### Paso 1. Actualizamos los repositorios
 
 ```yaml
 ---
-- name: Playbook para instalar la pila LAMP en el FrontEnd
+- name: Configuración de Apache y PHP en el fronted
   hosts: frontend
   become: yes
 
@@ -100,59 +114,14 @@ sudo ansible-playbooks -i /ruta/al/inventario /ruta/al/archivo/yaml
         state: present
 ```
 
-### Paso 3. Instalamos PHP y los módulos necesarios
+### Paso 3. Habilitamos el módulo Rewrite
 
 ```yaml
-    - name: Instalar PHP y los módulos necesarios
-      apt: 
-        name:
-          - php
-          - php-mysql
-          - libapache2-mod-php
-          - php-bcmath
-          - php-curl
-          - php-gd
-          - php-imagick
-          - php-intl
-          - php-memcached
-          - php-mbstring
-          - php-dom
-          - php-zip
-          - php-cli
-          - php-xml
-          - php-soap
-        state: present
+    - name: Habilitar el módulo rewrite
+      command: a2enmod rewrite
 ```
 
-### Paso 4. Modificamos la configuración de PHP
-
-```yaml
-    - name: Modificamos el valor max_input_vars de PHP
-      replace: 
-        path: /etc/php/8.3/apache2/php.ini
-        regexp: ;max_input_vars = 1000
-        replace: max_input_vars = 5000
-
-    - name: Modificamos el valor de memory_limit de PHP
-      replace: 
-        path: /etc/php/8.3/apache2/php.ini
-        regexp: memory_limit = 128M
-        replace: memory_limit = 256M
-
-    - name: Modificamos el valor de post_max_size de PHP
-      replace: 
-        path: /etc/php/8.3/apache2/php.ini
-        regexp: post_max_size = 8M
-        replace: post_max_size = 128M
-
-    - name: Modificamos el valor de upload_max_filesize de PHP
-      replace:
-        path: /etc/php/8.3/apache2/php.ini
-        regexp: upload_max_filesize = 2M
-        replace: upload_max_filesize = 128M
-```
-
-### Paso 5. Configuramos Apache y creamos los directorios necesarios
+### Paso 4. Copiamos el archivo de configuración de Apache
 
 ```yaml
     - name: Copiar el archivo de configuración de Apache
@@ -160,45 +129,43 @@ sudo ansible-playbooks -i /ruta/al/inventario /ruta/al/archivo/yaml
         src: ../templates/000-default.conf
         dest: /etc/apache2/sites-available/
         mode: 0755
-
-    - name: Crear directorio /var/www/html/moodle
-      file:
-        path: /var/www/html/moodle
-        state: directory
-        owner: www-data
-        group: www-data
-        mode: '0755'
-
-    - name: Crear directorio /var/www/moodledata
-      file:
-        path: /var/www/moodledata
-        state: directory
-        owner: www-data
-        group: www-data
-        mode: '0755'
 ```
 
-### Paso 6. Habilitamos el módulo rewrite de Apache y reiniciamos Apache
+### Paso 5. Instalamos PHP y algunos módulos necesarios para Apache y MySQL
 
 ```yaml
-    - name: Habilitar el módulo rewrite de Apache
-      apache2_module:
-        name: rewrite
+    - name: Instalar PHP y algunos módulos de PHP para Apache y MySQL
+      apt:
+        name:
+          - php
+          - libapache2-mod-php
+          - php-mysql
         state: present
+```
 
-    - name: Reiniciar el servidor web Apache
+### Paso 6. Reiniciamos apache y modificamos el propietario y el grupo del directorio /var/www/html
+
+```yaml
+    - name: Reiniciar el servicio de Apache para aplicar los cambios
       service:
         name: apache2
         state: restarted
+
+    - name: Modificar el propietario y el grupo del directorio
+      file:
+        path: /var/www/html
+        owner: www-data
+        group: www-data
+        recurse: yes
 ```
 
-## 2. Creación del archivo `install_lamp_backend` para la instalación de mysql y creacion de la base de datos y el usuario en el backend
+## 2. Creación del archivo `install_lamp_backend` para la instalación de MySQL
 
 ### Paso 1. Incluimos el archivo de variables
 
 ```yaml
 ---
-- name: Playbook para instalar la pila LAMP en el Backend
+- name: Configuración de MySQL en el backend
   hosts: backend
   become: yes
 
@@ -216,16 +183,24 @@ sudo ansible-playbooks -i /ruta/al/inventario /ruta/al/archivo/yaml
         update_cache: yes
 ```
 
-### Paso 3. Instalamos el sistema gestor de bases de datos MySQL
+### Paso 3. Actualizamos los paquetes
+```yaml
+    - name: Actualizar los paquetes
+      apt:
+        upgrade: dist
+        update_cache: yes
+```
+
+### Paso 4. Instalamos MySQL Server
 
 ```yaml
-    - name: Instalar el sistema gestor de bases de datos MySQL
+    - name: Instalar MySQL server
       apt:
         name: mysql-server
         state: present
 ```
 
-### Paso 4. Instalamos el modulo de pymysql
+### Paso 5. Instalamos el módulo de PyMySQL
 
 ```yaml
     - name: Instalamos el módulo de pymysql
@@ -234,65 +209,24 @@ sudo ansible-playbooks -i /ruta/al/inventario /ruta/al/archivo/yaml
         state: present
 ```
 
-### Paso 5. Creamos la base de datos para moodle
+
+### Paso 6. Configuramos el archivo mysqld.cnf
 
 ```yaml
-    - name: Crear la base de datos para moodle
-      mysql_db:
-        name: "{{ moodle.db_name }}"
-        encoding: utf8mb4
-        collation: utf8mb4_unicode_ci
-        state: present
-        login_unix_socket: /var/run/mysqld/mysqld.sock
+    - name: Configurar el archivo mysqld.cnf
+      replace:
+        path: /etc/mysql/mysql.conf.d/mysqld.cnf
+        regexp: '127.0.0.1'
+        replace: "{{ db.BACKEND_PRIVATE_IP }}"
 ```
 
 > [!IMPORTANT]  
 >Las variables que irán apareciendo durante los pasos están todas definidas en el archivo variables.yml y en variables_example.yml se pueden ver las variables que hay que tener definidas.
 
-### Paso 6. Borramos el usuario para la base de datos de moodle si existe
+### Paso 7. Reiniciamos el servicio de MySQL
 
 ```yaml
-    - name: Borra el usuario si existe
-      mysql_user:
-        name: "{{ moodle.db_user }}"
-        host: "{{ moodle.ip_cliente_mysql }}"
-        state: absent
-        login_unix_socket: /var/run/mysqld/mysqld.sock
-```
-
-### Paso 7. Creamos el usuario para la base de datos de moodle
-
-```yaml
-    - name: Crear el usuario para la base de datos de moodle
-      mysql_user:
-        name: "{{ moodle.db_user }}"
-        host: "{{ moodle.ip_cliente_mysql }}"
-        password: "{{ moodle.db_password }}"
-        priv: "{{ moodle.db_name }}.*:ALL"
-        state: present
-        login_unix_socket: /var/run/mysqld/mysqld.sock
-```
-
-## Paso 8. Cambiamos el bind-address en el archivo de configuración de MySQL
-
-```yaml
-    - name: Cambiar bind-address en mysqld.cnf
-      replace:
-        path: /etc/mysql/mysql.conf.d/mysqld.cnf
-        regexp: '^bind-address.*'
-        replace: 'bind-address = "{{ moodle.ip_cliente_mysql }}"'
-```
-
-### Paso 9. Reiniciamos los privilegios del usuario y el servicio MySQL
-
-```yaml
-    - name: Reiniciamos privilegios del usuario
-      mysql_db:
-        name: "{{ moodle.db_name }}"
-        state: present
-        login_unix_socket: /var/run/mysqld/mysqld.sock
-
-    - name: Reiniciamos el servicio de base de datos
+    - name: Reiniciar el servicio de MySQL
       service:
         name: mysql
         state: restarted
@@ -305,7 +239,7 @@ sudo ansible-playbooks -i /ruta/al/inventario /ruta/al/archivo/yaml
 ```yaml
 ---
 - name: Playbook para configurar HTTPS
-  hosts: frontend
+  hosts: balanceador
   become: yes
 
   vars_files:
@@ -346,131 +280,458 @@ sudo ansible-playbooks -i /ruta/al/inventario /ruta/al/archivo/yaml
         -d {{ certbot.le_domain }}
 ```
 
-## 4. Creación del archivo `deploy` para la implementación del certificado de la página web
+## 4. Creación del archivo `setup_load_balancer` para la implementación del balanceador de carga
 
 ### Paso 1. Incluimos el archivo de variables
 
 ```yaml
 ---
-- name: Playbook para configurar HTTPS
-  hosts: frontend
+- name: Configuración de Nginx en el balanceador
+  hosts: balanceador
   become: yes
 
   vars_files:
     - ../vars/variables.yml
 ```
 
-### Paso 2. Limpiamos descargar previos y directorios para que no haya duplicados
+### Paso 2. Actualizamos los repositorios
 
 ```yaml
   tasks:
-    - name: Limpiar descargas previas de Moodle
-      file:
-        path: /tmp/moodle*
-        state: absent
-      ignore_errors: true
 
-    - name: Limpiar directorio /var/www/html
+    - name: Actualizar los repositorios
+      apt:
+        update_cache: yes
+```
+
+### Paso 3. Actualizamos los paquetes
+
+```yaml
+    - name: Actualizar los paquetes
+      apt:
+        upgrade: dist
+        update_cache: yes
+```
+
+### Paso 4. Instalamos Nginx
+
+```yaml
+    - name: Instalar Nginx
+      apt:
+        name: nginx
+        state: present
+```
+
+### Paso 5. Deshabilitamos el enlace simbólico default (si existe)
+
+```yaml
+    - name: Deshabilitar el enlace simbólico default (si existe)
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+```
+
+### Paso 6. Copiamos el archivo de configuración de Nginx
+
+```yaml
+    - name: Copiar el archivo de configuración de Nginx
+      copy:
+        src: ../templates/load_balancer.conf
+        dest: /etc/nginx/sites-available
+        mode: '0644'
+```
+
+### Paso 7. Modificamos el archivo de cofiguración con las IPs correctas
+
+```yaml
+    - name: Modificar el archivo de configuración con las IPs correctas
+      replace:
+        path: /etc/nginx/sites-available/load_balancer.conf
+        regexp: 'IP_FRONTEND_1'
+        replace: "{{ balanceador.IP_FRONTEND_1 }}"
+      notify: Reload Nginx
+
+    - name: Modificar el archivo de configuración con las IPs y dominio correctos
+      replace:
+        path: /etc/nginx/sites-available/load_balancer.conf
+        regexp: 'IP_FRONTEND_2'
+        replace: "{{ balanceador.IP_FRONTEND_2 }}"
+      notify: Reload Nginx
+```
+
+### Paso 8. Modificamos el archivo de configuración con el dominio correcto
+
+```yaml
+    - name: Modificar el archivo de configuración con el dominio correcto
+      replace:
+        path: /etc/nginx/sites-available/load_balancer.conf
+        regexp: 'LE_DOMAIN'
+        replace: "{{ certbot.le_domain }}"
+      notify: Reload Nginx
+```
+
+### Paso 9. Activamos el archivo de configuración del balanceador de carga y reiniciamos Nginx
+
+```yaml
+    - name: Activar el archivo de configuración del balanceador de carga si no está activo
+      file:
+        src: /etc/nginx/sites-available/load_balancer.conf
+        dest: /etc/nginx/sites-enabled/load_balancer.conf
+        state: link
+        force: no
+      notify: Reload Nginx
+
+  handlers:
+    - name: Reload Nginx
+      service:
+        name: nginx
+        state: reloaded
+```
+
+## 5. Creación del archivo `setup_nfs_server` para la implementación del servidor NFS
+
+### Paso 1. Incluimos el archivo de variables
+
+```yaml
+---
+- name: Configuración del servidor NFS
+  hosts: nfs
+  become: yes
+  
+  vars_files:
+    - ../vars/variables.yml
+```
+
+### Paso 2. Actualizamos los repositorios
+
+```yaml
+  tasks:
+
+    - name: Actualizar los repositorios
+      apt:
+        update_cache: yes
+```
+
+### Paso 3. Actualizamos los paquetes
+
+```yaml
+    - name: Actualizar los paquetes
+      apt:
+        upgrade: dist
+        update_cache: yes
+```
+
+### Paso 4. Instalamos el servidor NFS
+
+```yaml
+    - name: Instalar el servidor NFS
+      apt:
+        name: nfs-kernel-server
+        state: present
+```
+
+### Paso 5. Creamos el directorio /var/www/html
+
+```yaml
+    - name: Crear el directorio /var/www/html
+      file:
+        path: /var/www/html
+        state: directory
+        owner: nobody
+        group: nogroup
+        mode: '0755'
+```
+
+### Paso 6. Configuramos los directorios exportados en /etc/exports
+
+```yaml
+    - name: Configurar los directorios exportados en /etc/exports
+      lineinfile:
+        path: /etc/exports
+        line: "/var/www/html {{ nfscliente.client_ip }}(rw,sync,no_subtree_check,no_root_squash)"
+        create: yes
+```
+
+### Paso 7. Reiniciamos el servicio NFS
+
+```yaml
+    - name: Reiniciar el servicio NFS
+      service:
+        name: nfs-kernel-server
+        state: restarted
+```
+
+## 6. Creación del archivo `setup_nfs_client` para la implementación del cliente NFS
+
+### Paso 1. Incluimos el archivo de variables
+
+```yaml
+---
+- name: Configuración del cliente NFS
+  hosts: frontend1
+  become: yes
+  
+  vars_files:
+    - ../vars/variables.yml
+```
+
+### Paso 2. Actualizamos los repositorios
+
+```yaml
+  tasks:
+
+    - name: Actualizar los repositorios
+      apt:
+        update_cache: yes
+```
+
+### Paso 3. Actualizamos los paquetes
+
+```yaml
+    - name: Actualizar los paquetes
+      apt:
+        upgrade: dist
+        update_cache: yes
+```
+
+### Paso 4. Instalamos el cliente NFS
+
+```yaml
+    - name: Instalar el cliente NFS
+      apt:
+        name: nfs-common
+        state: present
+```
+
+### Paso 5. Montamos el directorio NFS
+ 
+```yaml
+    - name: Montar el directorio NFS
+      command: mount {{ nfsserver.server_ip }}:/var/www/html /var/www/html
+```
+
+### Paso 6. Actualizamos /etc/fstam para montar el directorio NFS al iniciar
+
+```yaml
+    - name: Actualizar /etc/fstab para montar el directorio NFS al iniciar
+      lineinfile:
+        path: /etc/fstab
+        line: "{{ nfsserver.server_ip }}:/var/www/html /var/www/html nfs auto,nofail,noatime,nolock,intr,tcp,actimeo=1800 0 0"
+        create: yes
+```
+
+### Paso 7. Reiniciamos el servicio NFS
+
+```yaml
+    - name: Reiniciar el servicio NFS
+      service:
+        name: nfs-kernel-server
+        state: restarted
+```
+
+## 7. Creación del archivo `deploy_wordpress_frontend` para la implementación e instalación de WordPress en un frontal
+
+### Paso 1. Incluimos el archivo de variables
+
+```yaml
+---
+- name: Playbook para la instalacion de WordPress en un frontal
+  hosts: frontend1
+  become: yes
+
+  vars_files:
+    - ../vars/variables.yml
+```
+
+### Paso 2. Eliminamos el directorio de instalación
+
+```yaml
+  tasks:
+
+    - name: Eliminar el directorio de instalación
+      file:
+        path: /usr/local/bin/wp/
+        state: absent
+```
+
+### Paso 3. Configuramos permisos de WP-CLI
+
+```yaml
+    - name: Configurar permisos de wp-cli
+      file:
+        path: /usr/local/bin/
+        owner: www-data
+        group: www-data
+        mode: 0755
+```
+
+### Paso 4. Descargamos la utilidad WP-CLI
+
+```yaml
+    - name: Descargar la utilidad WP-CLI
+      get_url:
+        url: https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+        dest: /usr/local/bin/wp
+        mode: 0755
+```
+
+### Paso 5. Eliminamos instalaciones previas de WordPress
+ 
+```yaml
+    - name: Eliminar instalaciones previas de WordPress
       file:
         path: /var/www/html/*
         state: absent
-      ignore_errors: true
+```
 
-    - name: Limpiar directorio /var/www/moodledata
+### Paso 6. Descargamos el código fuente de WordPress
+```yaml
+    - name: Descargar el código fuente de WordPress
+      command: 
+        wp core download \
+        --locale="{{ wordpress.locale }}" \
+        --path=/var/www/html \
+        --allow-root
+```
+
+### Paso 7. Eliminamos wp-config.php si existe
+
+```yaml
+    - name: Eliminar wp-config.php si existe
       file:
-        path: /var/www/moodledata/*
+        path: /var/www/html/wp-config.php
         state: absent
-      ignore_errors: true
 ```
 
-### Paso 3. Descargamos el código fuente de moodle
+### Paso 8. Creamos el archivo de configuración de WordPress
 
 ```yaml
-    - name: Descargar el código fuente de Moodle
-      get_url:
-        url: https://download.moodle.org/download.php/direct/stable405/moodle-latest-405.tgz
-        dest: /tmp/moodle-latest-405.tgz
+    - name: Crear el archivo de configuración de WordPress
+      command: 
+        wp config create \
+        --dbname="{{ db.name }}" \
+        --dbuser="{{ db.user }}" \
+        --dbpass="{{ db.password }}" \
+        --dbhost={{ db.BACKEND_PRIVATE_IP }} \
+        --path={{ wordpress.directory }} \
+        --allow-root
 ```
 
-### Paso 4. Extraemos moodle y lo movemos al directorio deseado
+### Paso 9. Instalamos WordPress
 
 ```yaml
-    - name: Extraer Moodle
-      unarchive:
-        src: /tmp/moodle-latest-405.tgz
-        dest: /tmp
-        remote_src: yes
-
-    - name: Mover Moodle al directorio deseado
-      command:
-        cmd: mv /tmp/moodle {{ moodle.directory }}
+    - name: Instalar WordPress
+      command: 
+        wp core install \
+        --url="{{ certbot.le_domain }}" \
+        --title="{{ wordpress.title }}" \
+        --admin_user="{{ wordpress.admin_user }}" \
+        --admin_password="{{ wordpress.admin_password }}" \
+        --admin_email="{{ wordpress.admin_email }}" \
+        --path="{{ wordpress.directory }}" \
+        --allow-root
 ```
 
-### Paso 5. Configuramos permisos para los directorios moodle y moodledata
+### Paso 10. Configuramos permisos de los directorios necesarios
 
 ```yaml
-    - name: Configurar permisos para el directorio moodle
+    - name: Configuramos permisos de /var/www/html
       file:
-        path: "{{ moodle.directory }}"
-        state: directory
+        path: /var/www/html
         owner: www-data
         group: www-data
         mode: '0755'
         recurse: yes
 
-    - name: Configurar permisos para el directorio moodledata
+    - name: Configuramos permisos de /var/www/html/wp-content/upgrade
       file:
-        path: "{{ moodle.data_directory }}"
-        state: directory
+        path: /var/www/html/wp-content/upgrade
         owner: www-data
         group: www-data
-        mode: '0777'
+        mode: '0755'
+        recurse: yes
+
+    - name: Configuramos permisos de /var/www/html/wp-content/plugins
+      file:
+        path: /var/www/html/wp-content/plugins
+        owner: www-data
+        group: www-data
+        mode: '0755'
         recurse: yes
 ```
 
-### Paso 6. Hacemos una copia del archivo config-dist.php
+### Paso 11. Instalamos y activamos el tema Mindscape
 
 ```yaml
-    - name: Copiar archivo config-dist.php
+    - name: Instalar y activar el tema Mindscape
+      command: 
+        wp theme install mindscape --activate \
+        --path={{ wordpress.directory }} \
+        --allow-root
+```
+
+### Paso 12. Instalamos y activamos el plugin wps-hide-login
+
+```yaml
+    - name: Instalar y activar el plugin wps-hide-login
+      command: 
+        wp plugin install wps-hide-login --activate \
+        --path={{ wordpress.directory }} \
+        --allow-root
+```
+
+### Paso 13. Configuramos el plugin wps-hide-login
+
+```yaml
+    - name: Configurar el plugin wps-hide-login
+      command: 
+        wp option update whl_page {{ wordpress.hide_login_url }} \
+        --path={{ wordpress.directory }} \
+        --allow-root
+```
+
+### Paso 14. Configuramos los enlaces permanentes
+
+```yaml
+    - name: Configurar los enlaces permanentes
+      command: 
+        wp rewrite structure '/%postname%/' \
+        --path={{ wordpress.directory }} \
+        --allow-root
+```
+
+### Paso 15. Copiamos el archivo .htaccess al directorio de WordPress
+
+```yaml
+    - name: Copiar el archivo .htaccess al directorio de WordPress
       copy:
-        src: "{{ moodle.directory }}/config-dist.php"
-        dest: "{{ moodle.directory }}/config.php"
-        remote_src: yes
+        src: ../htaccess/.htaccess
+        dest: "{{ wordpress.directory }}/.htaccess"
+        owner: www-data
+        group: www-data
+        mode: '0644'
 ```
 
-### Paso 7. Ejecutamos la instalación de Moodle
+### Paso 16. Nos aseguramos que $_SERVER['HTTPS'] esté en wp-config.php
 
 ```yaml
-    - name: Ejecutar instalación de Moodle
-      command: >
-        sudo -u www-data php /var/www/html/moodle/admin/cli/install.php
-        --lang=es
-        --wwwroot=https://{{moodle.domain}}
-        --dataroot={{moodle.data_directory}}
-        --dbtype=mysqli
-        --dbhost={{moodle.db_host}}
-        --dbname={{moodle.db_name}}
-        --dbuser={{moodle.db_user}}
-        --dbpass={{moodle.db_password}}
-        --fullname="Moodle"
-        --shortname="ARL"
-        --summary="celia"
-        --adminuser=admin
-        --adminpass="Admin01%"
-        --adminemail="admin@gmail.com"
-        --non-interactive
-        --agree-license
+    - name: Asegurar que $_SERVER['HTTPS'] esté en wp-config.php
+      lineinfile:
+        path: /var/www/html/wp-config.php
+        line: "$_SERVER['HTTPS'] = 'on';"
+        state: present
+        insertbefore: "^define\\( 'DB_NAME', 'wordpress' \\);"
 ```
 
-### Paso 8. Reiniciamos Apache
+### Paso 17. Reiniciamos el servidor web Apache
 
 ```yaml
-    - name: Reiniciar apache
+    - name: Reiniciar el servidor web Apache
       service:
         name: apache2
         state: restarted
 ```
 
-## Comprobación de que Moodle funciona
+## Comprobación de que WordPress y el balanceador de carga funciona
 
 ![](imagenes/moodle-3.1.png)

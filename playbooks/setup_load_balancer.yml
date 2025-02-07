@@ -33,7 +33,7 @@
         dest: /etc/nginx/sites-available
         mode: '0644'
 
-    - name: Modificar el archivo de configuración con las IPs y dominio correctos
+    - name: Modificar el archivo de configuración con las IPs correctas
       replace:
         path: /etc/nginx/sites-available/load_balancer.conf
         regexp: 'IP_FRONTEND_1'

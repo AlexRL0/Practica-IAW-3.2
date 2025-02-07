@@ -3,9 +3,6 @@
   hosts: frontend
   become: yes
 
-  vars_files:
-    - ../vars/variables.yml
-
   tasks:
 
     - name: Actualizar los repositorios

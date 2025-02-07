@@ -1,20 +1,30 @@
 db:
+    frontend_private_ip:
+    BACKEND_PRIVATE_IP:
     name: 
-    user:
+    user: 
     password: 
-
-moodle:
-    directory: 
-    db_name:   
-    db_user: 
-    db_password: 
-    type:   
-    db_host: 
-    ip_cliente_mysql:
-    domain: 
-    data_directory:
-   
- 
+    
 certbot:
     le_email:
     le_domain: 
+
+wordpress:
+  directory:
+  domain:
+  title:
+  admin_user:
+  admin_password:
+  admin_email:
+  hide_login_url:
+  locale:
+
+nfsserver: 
+    server_ip:
+
+nfscliente:
+    client_ip:
+
+balanceador:
+    IP_FRONTEND_1:
+    IP_FRONTEND_2:

@@ -1,6 +1,6 @@
 ---
 - name: Configuración del cliente NFS
-  hosts: frontend
+  hosts: frontend1
   become: yes
   
   vars_files:
