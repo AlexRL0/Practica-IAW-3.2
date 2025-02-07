@@ -16,7 +16,7 @@ wordpress:
   admin_user: "admin"
   admin_password: "password"
   admin_email: "admin@example.com"
-  hide_login_url: "nohaynada"
+  hide_login_url: "nada"
   locale: es_ES
 
 nfsserver: 

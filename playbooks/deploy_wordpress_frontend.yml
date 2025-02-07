@@ -45,7 +45,7 @@
       command: wp theme install mindscape --activate --path={{ wordpress.directory }} --allow-root
 
     - name: Instalar un plugin
-      command: wp plugin install wps-hide-login --activate --path={{ wordpress.directory }} --allow-root
+      command: wp plugin install wps-hide-login --activate --path={{ wordpress.hide_login_url }} --allow-root
 
     - name: Configurar el plugin de WHL
       command: wp option update whl_page "{{ wordpress.hide_login_url }}" --path={{ wordpress.directory }} --allow-root
