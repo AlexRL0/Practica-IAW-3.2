@@ -51,7 +51,7 @@
       replace:
         path: /etc/nginx/sites-available/load_balancer.conf
         regexp: 'LE_DOMAIN'
-        replace: "{{ certbot.domain }}"
+        replace: "{{ certbot.le_domain }}"
       notify: Reload Nginx
 
     - name: Activar el archivo de configuración del balanceador de carga si no está activo
