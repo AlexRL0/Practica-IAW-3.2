@@ -63,4 +63,21 @@
         path: /var/www/html/
         owner: www-data
         group: www-data
+        mode: '0755'
         recurse: yes
+
+    - name: Cambiar el propietario y el grupo al directorio /wp-content/upgrade
+      file:
+        path: /var/www/html/wp-content/upgrade
+        owner: www-data
+        group: www-data
+        mode: '0755'
+        recurse: yes    
+
+    - name: Cambiar el propietario y el grupo al directorio /wp-content/plugins
+      file:
+        path: /var/www/html/wp-content/plugins
+        owner: www-data
+        group: www-data
+        mode: '0755'
+        recurse: yes    
