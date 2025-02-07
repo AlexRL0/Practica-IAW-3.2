@@ -1,6 +1,6 @@
 ---
 - name: Configuración de WordPress con WP-CLI en el frontend
-  hosts: frontend
+  hosts: frontend1
   become: yes
 
   vars_files:
