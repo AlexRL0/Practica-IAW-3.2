@@ -27,9 +27,7 @@
         mode: 0755
 
     - name: Eliminar instalaciones previas de WordPress
-      file:
-        path: /var/www/html/*
-        state: absent
+      shell: rm -rf var/www/html/*
       
     - name: Descargar el código fuente de WordPress
       command: 
