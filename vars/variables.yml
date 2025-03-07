@@ -1,17 +1,17 @@
 db:
     frontend_private_ip: "172.31.%" 
-    BACKEND_PRIVATE_IP: "172.31.36.194"
+    BACKEND_PRIVATE_IP: "172.31.83.116"
     name: wordpress
     user: wordpress
     password: password
     
 certbot:
     le_email: admin@gmail.com
-    le_domain: alexwordpress.zapto.org
+    le_domain: wdarliaw.zapto.org
 
 wordpress:
   directory: /var/www/html
-  domain: "https://alexwordpress.zapto.org"
+  domain: "https://wdarliaw.zapto.org"
   title: "SitioAlex"
   admin_user: "admin"
   admin_password: "password"
@@ -20,11 +20,11 @@ wordpress:
   locale: es_ES
 
 nfsserver: 
-    server_ip: "172.31.45.54"
+    server_ip: "172.31.86.123"
 
 nfscliente:
     client_ip: "172.31.0.0/16"
 
 balanceador:
-    IP_FRONTEND_1: "172.31.38.73"
-    IP_FRONTEND_2: "172.31.41.123"
+    IP_FRONTEND_1: "172.31.91.42"
+    IP_FRONTEND_2: "172.31.83.104"

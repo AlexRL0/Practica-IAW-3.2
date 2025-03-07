@@ -732,6 +732,30 @@ sudo ansible-playbooks -i /ruta/al/inventario /ruta/al/archivo/yaml
         state: restarted
 ```
 
+## Comprobación de que los playbooks funcionan
+
+Playbook del backend
+![](imagenes/playbook-wp-parte1.png)
+---
+Playbook del frontend
+![](imagenes/playbook-wp-parte2.png)
+---
+Playbook del servidor nfs
+![](imagenes/playbook-wp-parte3.png)
+---
+Playbook del cliente nfs
+![](imagenes/playbook-wp-parte4.png)
+---
+Playbook de la configuración de wordpress en el backend
+![](imagenes/playbook-wp-parte5.png)
+---
+Playbook de la instalación de wordpress en un frontal
+![](imagenes/playbook-wp-parte6.png)
+---
+Playbook del nginx en el balanceador y configurar https
+![](imagenes/playbook-wp-parte7.png)
+---
+
 ## Comprobación de que WordPress funciona
 
 ![](imagenes/wordpress-3.2.png)
